@@ -1,50 +1,66 @@
 <script lang="ts">
+	import Button from '$lib/components/button.svelte';
+	import Input from '$lib/components/input.svelte';
+
 	let name = $state('');
-	let deathDate = $state();
+	let birthDate = $state('');
+	let deathDate = $state('');
+	let obituary = $state('');
+	let epitaph = $state('');
 	let enableComments = $state(false);
 
-	const handleNameChange = (event: Event & { currentTarget: HTMLInputElement }) => {
-		const input = event.currentTarget.value;
-		name = input;
-	};
-
-	const handleDeathDateChange = (event: Event & { currentTarget: HTMLInputElement }) => {
-		const input = event.currentTarget.value;
-		const dateObj = new Date(input);
-
-		const unixEpoch = dateObj.valueOf();
-		deathDate = unixEpoch;
-	};
-
 	const handleEnableComments = (event: Event & { currentTarget: HTMLInputElement }) => {
-		console.log(event)
 		const input = event.currentTarget.checked;
 		enableComments = input;
 	};
+
+	const handleSave = async () => {
+		const attributes = {
+			name,
+			birthDate,
+			deathDate,
+			obituary,
+			epitaph,
+			enableComments
+		};
+
+		try {
+			const response = await fetch('http://localhost:3306/', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify(attributes)
+			});
+			if (!response.ok) {
+				throw new Error('Failed to save memorial');
+			}
+			// Optionally handle success (e.g., redirect or show a message)
+			console.log('Memorial saved!');
+		} catch (error) {
+			console.error(error);
+		}
+	};
 </script>
 
-<div class="flex w-full flex-col items-center gap-4 p-4">
-	<h1 class="text-xl font-bold">Create memorial</h1>
-	<label>
-		Name
-		<input class="rounded-md border px-2 py-1" onchange={handleNameChange} value={name} />
-	</label>
-	<label>
-		Death Date
-		<input
-			class="rounded-md border px-2 py-1"
-			type="date"
-			onchange={handleDeathDateChange}
-			value={deathDate}
-		/>
-	</label>
-	<label>
+<div class="mx-auto flex w-full max-w-md flex-col gap-4 p-4">
+	<h1 class="border-red mb-2 rounded bg-red-500 p-1">Create memorial.</h1>
+	<Input text="Name" bind:value={name} />
+	<Input text="Birth Date" type="date" bind:value={birthDate} />
+	<Input text="Death Date" type="date" bind:value={deathDate} />
+	<Input text="Obituary" bind:value={obituary} />
+	<Input text="Epitaph" bind:value={epitaph} />
+	<label class="items-left flex w-full gap-2">
 		Enable comments
 		<input
-			class="rounded-md border px-2 py-1"
+			class="flex-1 rounded border border-white"
 			type="checkbox"
 			onchange={handleEnableComments}
 			value={enableComments}
 		/>
 	</label>
+</div>
+
+<div>
+	<Button text="Save." on:click={handleSave}></Button>
 </div>
